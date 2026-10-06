@@ -1,9 +1,18 @@
 <?php
+
 declare(strict_types=1);
+
 namespace App\Infrastructure\Persistence;
+
 use App\Application\Contracts\UnitOfWork;
-use Illuminate\Support\Facades\DB;
-final class LaravelUnitOfWork implements UnitOfWork
+use Illuminate\Database\DatabaseManager;
+
+final readonly class LaravelUnitOfWork implements UnitOfWork
 {
-    public function transactional(callable $operation): mixed { return DB::transaction($operation); }
+    public function __construct(private DatabaseManager $database) {}
+
+    public function transactional(callable $operation): mixed
+    {
+        return $this->database->transaction($operation);
+    }
 }
