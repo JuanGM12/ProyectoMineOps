@@ -26,6 +26,7 @@ final class CompleteActivityHandlerTest extends TestCase
     public function test_existing_activity_is_completed_persisted_and_returned(): void
     {
         $activity = $this->activity();
+        $activity->start();
         $repository = $this->mock(ActivityRepository::class, function (MockInterface $mock) use ($activity): void {
             $mock->shouldReceive('findById')->once()->andReturn($activity);
             $mock->shouldReceive('save')->once()->with($activity);

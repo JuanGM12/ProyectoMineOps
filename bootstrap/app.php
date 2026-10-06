@@ -1,6 +1,11 @@
 <?php
 
+use App\Application\Activity\Exceptions\ActivityCodeAlreadyExists;
+use App\Application\Activity\Exceptions\ActivityNotFound;
+use App\Domain\Activity\Exceptions\DomainException;
+use App\Domain\Activity\Exceptions\InvalidActivityStatusTransition;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -23,6 +28,18 @@ return Application::configure(basePath: dirname(__DIR__))
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
 
+        $exceptions->render(function (ActivityNotFound $exception, Request $request) {
+            if (! $request->is('api/*')) {
+                return null;
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => $exception->getMessage(),
+                'errors' => (object) [],
+            ], 404);
+        });
+
         $exceptions->render(function (ModelNotFoundException $exception, Request $request) {
             if (! $request->is('api/*')) {
                 return null;
@@ -30,12 +47,45 @@ return Application::configure(basePath: dirname(__DIR__))
 
             return response()->json([
                 'success' => false,
-                'error' => [
-                    'code' => 'RESOURCE_NOT_FOUND',
-                    'message' => 'El recurso solicitado no existe.',
-                    'details' => [],
-                ],
+                'message' => 'El recurso solicitado no existe.',
+                'errors' => (object) [],
             ], 404);
+        });
+
+        $exceptions->render(function (ActivityCodeAlreadyExists $exception, Request $request) {
+            if (! $request->is('api/*')) {
+                return null;
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => $exception->getMessage(),
+                'errors' => (object) [],
+            ], 409);
+        });
+
+        $exceptions->render(function (InvalidActivityStatusTransition $exception, Request $request) {
+            if (! $request->is('api/*')) {
+                return null;
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => $exception->getMessage(),
+                'errors' => (object) [],
+            ], 409);
+        });
+
+        $exceptions->render(function (DomainException $exception, Request $request) {
+            if (! $request->is('api/*')) {
+                return null;
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => $exception->getMessage(),
+                'errors' => (object) [],
+            ], 422);
         });
 
         $exceptions->render(function (ValidationException $exception, Request $request) {
@@ -45,12 +95,23 @@ return Application::configure(basePath: dirname(__DIR__))
 
             return response()->json([
                 'success' => false,
-                'error' => [
-                    'code' => 'VALIDATION_ERROR',
-                    'message' => 'Los datos enviados no son válidos.',
-                    'details' => $exception->errors(),
-                ],
+                'message' => 'Los datos enviados no son válidos.',
+                'errors' => $exception->errors(),
             ], 422);
+        });
+
+        $exceptions->render(function (QueryException $exception, Request $request) {
+            $driverCode = (int) ($exception->errorInfo[1] ?? 0);
+
+            if (! $request->is('api/*') || ! in_array($driverCode, [19, 1062], true)) {
+                return null;
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'El registro entra en conflicto con datos existentes.',
+                'errors' => (object) [],
+            ], 409);
         });
 
         $exceptions->render(function (HttpExceptionInterface $exception, Request $request) {
@@ -60,13 +121,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
             return response()->json([
                 'success' => false,
-                'error' => [
-                    'code' => $exception->getStatusCode() === 404 ? 'RESOURCE_NOT_FOUND' : 'HTTP_ERROR',
-                    'message' => $exception->getStatusCode() === 404
-                        ? 'El recurso solicitado no existe.'
-                        : 'No fue posible procesar la solicitud.',
-                    'details' => [],
-                ],
+                'message' => $exception->getStatusCode() === 404
+                    ? 'El recurso solicitado no existe.'
+                    : 'No fue posible procesar la solicitud.',
+                'errors' => (object) [],
             ], $exception->getStatusCode());
         });
 
@@ -77,11 +135,8 @@ return Application::configure(basePath: dirname(__DIR__))
 
             return response()->json([
                 'success' => false,
-                'error' => [
-                    'code' => 'INTERNAL_SERVER_ERROR',
-                    'message' => 'Ocurrió un error inesperado.',
-                    'details' => [],
-                ],
+                'message' => 'Ocurrió un error inesperado.',
+                'errors' => (object) [],
             ], 500);
         });
     })->create();

@@ -10,6 +10,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('activities', function (Blueprint $table): void {
+            $table->engine = 'InnoDB';
             $table->uuid('id')->primary();
             $table->string('code', 50)->unique();
             $table->string('title', 200);
@@ -22,6 +23,11 @@ return new class extends Migration
             $table->date('scheduled_date');
             $table->date('due_date')->nullable();
             $table->timestamps();
+
+            $table->index(['status', 'due_date']);
+            $table->index(['responsible_id', 'created_at']);
+            $table->index(['priority', 'created_at']);
+            $table->index(['scheduled_date', 'id']);
         });
     }
 

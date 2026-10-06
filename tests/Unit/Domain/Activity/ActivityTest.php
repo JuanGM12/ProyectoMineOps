@@ -71,6 +71,77 @@ final class ActivityTest extends TestCase
         $activity->complete();
     }
 
+    public function test_pending_activity_cannot_be_completed_without_being_started(): void
+    {
+        $activity = $this->activity();
+
+        $this->expectException(InvalidActivityStatusTransition::class);
+
+        $activity->complete();
+    }
+
+    public function test_completed_activity_cannot_be_cancelled(): void
+    {
+        $activity = $this->activity();
+        $activity->start();
+        $activity->complete();
+
+        $this->expectException(InvalidActivityStatusTransition::class);
+
+        $activity->cancel();
+    }
+
+    public function test_cancelled_activity_cannot_be_started(): void
+    {
+        $activity = $this->activity();
+        $activity->cancel();
+
+        $this->expectException(InvalidActivityStatusTransition::class);
+
+        $activity->start();
+    }
+
+    public function test_pending_activity_can_be_cancelled(): void
+    {
+        $activity = $this->activity();
+
+        $activity->cancel();
+
+        self::assertSame(ActivityStatus::CANCELLED, $activity->status());
+    }
+
+    public function test_in_progress_activity_can_be_completed(): void
+    {
+        $activity = $this->activity();
+        $activity->start();
+
+        $activity->complete();
+
+        self::assertSame(ActivityStatus::COMPLETED, $activity->status());
+    }
+
+    public function test_in_progress_activity_can_be_cancelled(): void
+    {
+        $activity = $this->activity();
+        $activity->start();
+
+        $activity->cancel();
+
+        self::assertSame(ActivityStatus::CANCELLED, $activity->status());
+    }
+
+    public function test_repeating_the_current_state_command_is_idempotent(): void
+    {
+        $activity = $this->activity();
+        $activity->start();
+        $activity->releaseDomainEvents();
+
+        $activity->start();
+
+        self::assertSame(ActivityStatus::IN_PROGRESS, $activity->status());
+        self::assertSame([], $activity->releaseDomainEvents());
+    }
+
     public function test_start_changes_status_and_records_event(): void
     {
         $activity = $this->activity();
@@ -116,6 +187,34 @@ final class ActivityTest extends TestCase
         $this->expectException(InvalidActivitySchedule::class);
 
         $activity->changePriority(ActivityPriority::CRITICAL);
+    }
+
+    public function test_planning_can_be_revised_to_critical_with_a_due_date(): void
+    {
+        $activity = $this->activity(
+            priority: ActivityPriority::LOW,
+            schedule: new ActivitySchedule(new DateTimeImmutable('2026-10-10'), null),
+        );
+        $schedule = new ActivitySchedule(
+            new DateTimeImmutable('2026-10-12'),
+            new DateTimeImmutable('2026-10-14'),
+        );
+
+        $activity->revisePlanning(ActivityPriority::CRITICAL, $schedule);
+
+        self::assertSame(ActivityPriority::CRITICAL, $activity->priority());
+        self::assertTrue($activity->schedule()->equals($schedule));
+    }
+
+    public function test_critical_planning_can_be_downgraded_and_remove_due_date(): void
+    {
+        $activity = $this->activity(priority: ActivityPriority::CRITICAL);
+        $schedule = new ActivitySchedule(new DateTimeImmutable('2026-10-12'), null);
+
+        $activity->revisePlanning(ActivityPriority::LOW, $schedule);
+
+        self::assertSame(ActivityPriority::LOW, $activity->priority());
+        self::assertNull($activity->schedule()->dueDate());
     }
 
     private function activity(
