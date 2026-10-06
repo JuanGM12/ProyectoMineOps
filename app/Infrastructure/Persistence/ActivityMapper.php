@@ -1,6 +1,9 @@
 <?php
+
 declare(strict_types=1);
+
 namespace App\Infrastructure\Persistence;
+
 use App\Domain\Activity\Entities\Activity;
 use App\Domain\Activity\Enums\ActivityPriority;
 use App\Domain\Activity\Enums\ActivityStatus;
@@ -9,8 +12,9 @@ use App\Domain\Activity\ValueObjects\ActivityId;
 use App\Domain\Activity\ValueObjects\ActivitySchedule;
 use App\Domain\Activity\ValueObjects\ActivityTitle;
 use App\Domain\Activity\ValueObjects\ResponsibleId;
-use App\Models\ActivityModel;
+use App\Infrastructure\Persistence\Eloquent\Models\ActivityModel;
 use DateTimeImmutable;
+
 final class ActivityMapper
 {
     public static function toDomain(ActivityModel $model): Activity
@@ -31,9 +35,10 @@ final class ActivityMapper
             ),
         );
     }
+
     public static function toModel(Activity $activity, ?ActivityModel $model = null): ActivityModel
     {
-        $model ??= new ActivityModel();
+        $model ??= new ActivityModel;
 
         $model->fill([
             'id' => $activity->id()->value(),
