@@ -4,20 +4,27 @@ declare(strict_types=1);
 
 namespace App\Application\Activity\Queries\GetActivities;
 
-use App\Application\Activity\DTOs\ActivityDTO;
-use App\Domain\Activity\Entities\Activity;
-use App\Domain\Activity\Repositories\ActivityRepository;
+use App\Application\Activity\Contracts\ActivityReadRepository;
+use App\Application\Activity\DTOs\ActivityListCriteria;
+use App\Application\Activity\DTOs\PaginatedActivitiesDTO;
 
 final readonly class GetActivitiesHandler
 {
-    public function __construct(private ActivityRepository $activities) {}
+    public function __construct(private ActivityReadRepository $activities) {}
 
-    /** @return list<ActivityDTO> */
-    public function handle(GetActivitiesQuery $query): array
+    public function handle(GetActivitiesQuery $query): PaginatedActivitiesDTO
     {
-        return array_map(
-            static fn (Activity $activity): ActivityDTO => ActivityDTO::fromDomain($activity),
-            $this->activities->findAll(),
-        );
+        return $this->activities->paginate(new ActivityListCriteria(
+            page: $query->page,
+            perPage: $query->perPage,
+            status: $query->status,
+            priority: $query->priority,
+            responsibleId: $query->responsibleId,
+            scheduledFrom: $query->scheduledFrom,
+            scheduledTo: $query->scheduledTo,
+            overdue: $query->overdue,
+            sort: $query->sort,
+            direction: $query->direction,
+        ));
     }
 }

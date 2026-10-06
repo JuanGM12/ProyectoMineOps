@@ -77,22 +77,6 @@ final class EloquentActivityRepositoryTest extends TestCase
         self::assertNull($repository->findByCode(new ActivityCode('ACT-999')));
     }
 
-    public function test_it_returns_all_activities_in_deterministic_id_order(): void
-    {
-        $repository = $this->repository();
-        $second = $this->activity('00000000-0000-4000-8000-000000000002', 'ACT-002');
-        $first = $this->activity('00000000-0000-4000-8000-000000000001', 'ACT-001');
-        $repository->save($second);
-        $repository->save($first);
-
-        $activities = $repository->findAll();
-
-        self::assertSame(
-            [$first->id()->value(), $second->id()->value()],
-            array_map(static fn (Activity $activity): string => $activity->id()->value(), $activities),
-        );
-    }
-
     public function test_it_removes_an_activity(): void
     {
         $repository = $this->repository();

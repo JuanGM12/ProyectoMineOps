@@ -21,6 +21,7 @@ final class CreateActivityHandlerTest extends TestCase
     public function test_valid_command_persists_activity_in_transaction_and_returns_dto(): void
     {
         $repository = $this->mock(ActivityRepository::class, function (MockInterface $mock): void {
+            $mock->shouldReceive('findByCode')->once()->andReturnNull();
             $mock->shouldReceive('save')
                 ->once()
                 ->withArgs(function (Activity $activity): bool {
@@ -56,6 +57,7 @@ final class CreateActivityHandlerTest extends TestCase
     public function test_domain_rule_prevents_persisting_invalid_activity(): void
     {
         $repository = $this->mock(ActivityRepository::class, function (MockInterface $mock): void {
+            $mock->shouldReceive('findByCode')->once()->andReturnNull();
             $mock->shouldNotReceive('save');
         });
         $unitOfWork = $this->mock(UnitOfWork::class, function (MockInterface $mock): void {

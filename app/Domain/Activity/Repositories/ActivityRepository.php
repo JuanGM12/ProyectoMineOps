@@ -12,9 +12,6 @@ interface ActivityRepository
 {
     public function save(Activity $activity): void;
 
-    /** @return list<Activity> */
-    public function findAll(): array;
-
     public function findById(ActivityId $id): ?Activity;
 
     public function findByCode(ActivityCode $code): ?Activity;

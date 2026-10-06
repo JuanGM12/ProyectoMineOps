@@ -93,12 +93,12 @@ final class Activity
 
     public function start(): void
     {
-        if (in_array($this->status, [ActivityStatus::COMPLETED, ActivityStatus::CANCELLED], true)) {
-            throw InvalidActivityStatusTransition::fromTo($this->status, ActivityStatus::IN_PROGRESS);
-        }
-
         if ($this->status === ActivityStatus::IN_PROGRESS) {
             return;
+        }
+
+        if ($this->status !== ActivityStatus::PENDING) {
+            throw InvalidActivityStatusTransition::fromTo($this->status, ActivityStatus::IN_PROGRESS);
         }
 
         $this->status = ActivityStatus::IN_PROGRESS;
@@ -107,12 +107,12 @@ final class Activity
 
     public function complete(): void
     {
-        if ($this->status === ActivityStatus::CANCELLED) {
-            throw InvalidActivityStatusTransition::fromTo($this->status, ActivityStatus::COMPLETED);
-        }
-
         if ($this->status === ActivityStatus::COMPLETED) {
             return;
+        }
+
+        if ($this->status !== ActivityStatus::IN_PROGRESS) {
+            throw InvalidActivityStatusTransition::fromTo($this->status, ActivityStatus::COMPLETED);
         }
 
         $this->status = ActivityStatus::COMPLETED;
@@ -123,6 +123,10 @@ final class Activity
     {
         if ($this->status === ActivityStatus::CANCELLED) {
             return;
+        }
+
+        if ($this->status === ActivityStatus::COMPLETED) {
+            throw InvalidActivityStatusTransition::fromTo($this->status, ActivityStatus::CANCELLED);
         }
 
         $this->status = ActivityStatus::CANCELLED;
@@ -159,6 +163,23 @@ final class Activity
     {
         $this->ensureCriticalActivityHasDueDate($priority, $this->schedule);
         $this->priority = $priority;
+    }
+
+    public function revisePlanning(ActivityPriority $priority, ActivitySchedule $schedule): void
+    {
+        $this->ensureCriticalActivityHasDueDate($priority, $schedule);
+
+        $scheduleChanged = ! $this->schedule->equals($schedule);
+        $this->priority = $priority;
+        $this->schedule = $schedule;
+
+        if ($scheduleChanged) {
+            $this->record(new ActivityRescheduled(
+                $this->id->value(),
+                $schedule->scheduledDate(),
+                $schedule->dueDate(),
+            ));
+        }
     }
 
     public function rename(ActivityTitle $title): void

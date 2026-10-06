@@ -2,14 +2,13 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Activity\Queries\GetActivities;
+namespace App\Application\Activity\DTOs;
 
-use App\Application\Activity\Bus\Query;
 use App\Domain\Activity\Enums\ActivityPriority;
 use App\Domain\Activity\Enums\ActivityStatus;
 use DateTimeImmutable;
 
-final readonly class GetActivitiesQuery implements Query
+final readonly class ActivityListCriteria
 {
     public function __construct(
         public int $page = 1,

@@ -17,13 +17,6 @@ final class EloquentActivityRepository implements ActivityRepository
         ActivityMapper::toModel($activity, ActivityModel::query()->find($activity->id()->value()))->save();
     }
 
-    /** @return list<Activity> */
-    public function findAll(): array
-    {
-        return ActivityModel::query()->orderBy('id')->get()
-            ->map(static fn (ActivityModel $model): Activity => ActivityMapper::toDomain($model))->all();
-    }
-
     public function findById(ActivityId $id): ?Activity
     {
         $model = ActivityModel::query()->find($id->value());
