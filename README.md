@@ -1,5 +1,8 @@
 # MineOps - Planning Service
 
+##Diagrama, Pruebas de peticiones y GitFlow en el siguiente enlace:
+https://docs.google.com/document/d/1C7aNR01bSPKQfl2c-vH1By1J74a2RcdI/edit?usp=sharing&ouid=112810326757389146509&rtpof=true&sd=true
+
 ## Descripción
 
 Microservicio académico encargado de gestionar la planificación de actividades operacionales de MineOps. En esta entrega el único agregado implementado es `Activity`.
@@ -171,10 +174,16 @@ Las respuestas exitosas usan `success` y `data`. Los errores usan `success`, `me
 
 ## Integrantes
 
-La asignación de integrantes se mantiene en la documentación académica del equipo. Cada Pull Request debe identificar claramente al responsable de Domain, Application, Infrastructure o Presentation.
+Anderson Arley Cano Osorio
+Juan Diego Patiño Osorio
+Jose Ricardo Quiros García
+Juan Pablo Rebolledo
 
 ## Arquitectura futura
 
 Fases posteriores podrán incorporar Evidence Service, Forms Service, Maintenance Service, Inventory Service, SST Service, Notification Service, Sync Service y una aplicación Android offline-first. Esos componentes no forman parte de esta entrega.
 
 Los Domain Events de Activity están preparados, pero su publicación se deja para una fase futura que pueda garantizar despacho posterior al commit mediante outbox o mecanismo equivalente.
+
+##Diagrama, Pruebas de peticiones y GitFlow en el siguiente enlace:
+https://docs.google.com/document/d/1C7aNR01bSPKQfl2c-vH1By1J74a2RcdI/edit?usp=sharing&ouid=112810326757389146509&rtpof=true&sd=true
